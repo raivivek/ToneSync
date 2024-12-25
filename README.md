@@ -5,6 +5,7 @@
     <em>Smart webcam optimization tool for Hackintosh systems, enhancing video quality and color accuracy</em>
 </p>
 
+
 ToneSync addresses common Hackintosh webcam issues by:
 - Bypassing macOS's default webcam color processing
 - Directly controlling USB webcam parameters
