@@ -91,6 +91,5 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let device = CameraManager.shared.currentDevice {
             CameraManager.shared.resetCamera(device)
         }
-        USBHelper.clearCache()
     }
 }

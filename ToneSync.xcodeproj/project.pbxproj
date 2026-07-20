@@ -12,6 +12,7 @@
 		EA5E53E67BA9B3E0FD2FD298 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5E5FC10D147EB20FC115E3 /* CameraManager.swift */; };
 		EA5E54711B1278556CA248F1 /* USBHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5E587703101FC9A7D94A05 /* USBHelper.swift */; };
 		EA5E566630B0F1ECC470DA6D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EA5E59F963AAEC879949AA85 /* Assets.xcassets */; };
+		DD3778142D1834A2008F4A44 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DD3778152D1834A2008F4A45 /* PrivacyInfo.xcprivacy */; };
 		EA5E580E57426D96222025E6 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EA5E58BC55C61F8B5FCBEB6D /* Preview Assets.xcassets */; };
 		EA5E5B01F56539F71EA1D0AD /* CaptureDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5E52CB962EDAD8C0BA281E /* CaptureDevice.swift */; };
 		EA5E5CD21B59DDCA2E02CEDA /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5E5CCDF9FBA144035E5040 /* LaunchAtLogin.swift */; };
@@ -20,6 +21,7 @@
 
 /* Begin PBXFileReference section */
 		DD3778132D1834A2008F4A43 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		DD3778152D1834A2008F4A45 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		EA5E50B2E0EAF972663D4ADF /* ToneSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ToneSync.entitlements; sourceTree = "<group>"; };
 		EA5E50FDD06157722D5381B8 /* PreferencesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		EA5E513FF76943F7E29E0F33 /* StatusBarManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusBarManager.swift; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 			children = (
 				EA5E59F963AAEC879949AA85 /* Assets.xcassets */,
 				EA5E50B2E0EAF972663D4ADF /* ToneSync.entitlements */,
+				DD3778152D1834A2008F4A45 /* PrivacyInfo.xcprivacy */,
 				EA5E5DCF24971C2C97586B65 /* Preview Content */,
 				EA5E56AB7A78841C8532E661 /* ToneSyncApp.swift */,
 				EA5E5FC10D147EB20FC115E3 /* CameraManager.swift */,
@@ -112,7 +115,7 @@
 		EA5E5A9074E11900516CE3D2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1420;
+				LastUpgradeCheck = 1600;
 			};
 			buildConfigurationList = EA5E51CB7B47BCF35784833A /* Build configuration list for PBXProject "ToneSync" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -138,6 +141,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EA5E566630B0F1ECC470DA6D /* Assets.xcassets in Resources */,
+				DD3778142D1834A2008F4A44 /* PrivacyInfo.xcprivacy in Resources */,
 				EA5E580E57426D96222025E6 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -264,7 +268,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.7;
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -320,7 +324,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.7;
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;

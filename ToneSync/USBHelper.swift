@@ -7,8 +7,6 @@ import IOKit
 import IOKit.usb
 
 class USBHelper {
-    private static var deviceInfoCache: [io_service_t: (vendorID: Int, productID: Int)] = [:]
-
     static func findUSBDevice(withVendorID vendorID: Int, productID: Int) -> io_service_t? {
         let matchingDict = IOServiceMatching(kIOUSBDeviceClassName) as NSMutableDictionary
         matchingDict[kUSBVendorID] = NSNumber(value: vendorID)
@@ -27,9 +25,10 @@ class USBHelper {
         return device != 0 ? device : nil
     }
 
-    static func getUSBDeviceInfo(device: io_service_t) -> (vendorID: Int, productID: Int)? {
+    static func getUSBDeviceInfo(device: io_service_t) -> (vendorID: Int, productID: Int, productName: String?)? {
         var vendorID: Int = 0
         var productID: Int = 0
+        var productName: String?
 
         var propertyIterator: io_iterator_t = 0
         let result = IORegistryEntryCreateIterator(
@@ -54,6 +53,9 @@ class USBHelper {
                 if let idProduct = dict["idProduct"] as? Int {
                     productID = idProduct
                 }
+                if let name = dict["USB Product Name"] as? String {
+                    productName = name
+                }
             }
             IOObjectRelease(current)
             current = IOIteratorNext(propertyIterator)
@@ -61,8 +63,18 @@ class USBHelper {
 
         IOObjectRelease(propertyIterator)
 
-        deviceInfoCache[device] = (vendorID, productID)
-        return (vendorID, productID)
+        return (vendorID, productID, productName)
+    }
+
+    /// Returns true if the given USB device's product name matches (or is contained in / contains)
+    /// the AVCaptureDevice's localized name, so that camera controls are only ever applied to the
+    /// specific USB device backing the selected camera rather than every device sharing a vendor ID.
+    static func matchesCamera(productName: String?, cameraName: String) -> Bool {
+        guard let productName = productName, !productName.isEmpty else { return false }
+        let normalizedProduct = productName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedCamera = cameraName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedProduct.isEmpty, !normalizedCamera.isEmpty else { return false }
+        return normalizedCamera.contains(normalizedProduct) || normalizedProduct.contains(normalizedCamera)
     }
 
     static func isControlSupported(device: io_service_t, control: UInt8) -> Bool {
@@ -105,9 +117,5 @@ class USBHelper {
         }
 
         return supported
-    }
-
-    static func clearCache() {
-        deviceInfoCache.removeAll()
     }
 }
