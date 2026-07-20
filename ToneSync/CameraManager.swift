@@ -8,25 +8,27 @@ import IOKit
 import IOKit.usb
 
 
-class CameraManager {
+class CameraManager: NSObject {
     static let shared = CameraManager()
 
     var currentDevice: CaptureDevice? {
         didSet {
-            if let device = currentDevice {
-                updateOptimizationState()
-            }
+            guard let device = currentDevice else { return }
+            if oldValue?.avDevice.uniqueID == device.avDevice.uniqueID { return }
+            observeUsage(for: device)
+            updateOptimizationState()
         }
     }
     var availableDevices: [CaptureDevice] = []
     private(set) var isOptimized: Bool = false
 
-    private var optimizationTimer: Timer?
+    private var usageObservation: NSKeyValueObservation?
     private var discoverySession: AVCaptureDevice.DiscoverySession?
 
-    init() {
+    override init() {
+        super.init()
         loadDevices()
-        startMonitoringCameraUsage()
+        observeDeviceConnections()
     }
 
     private func updateOptimizationState() {
@@ -43,26 +45,46 @@ class CameraManager {
         }
     }
 
-    private func startMonitoringCameraUsage() {
-        stopMonitoringCameraUsage() // Stop existing timer if any
-        optimizationTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-            self?.checkCameraUsageAndOptimize()
+    private func observeUsage(for device: CaptureDevice) {
+        usageObservation?.invalidate()
+        usageObservation = device.avDevice.observe(\.isInUseByAnotherApplication, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async {
+                self?.updateOptimizationState()
+            }
         }
     }
 
-    private func stopMonitoringCameraUsage() {
-        optimizationTimer?.invalidate()
-        optimizationTimer = nil
+    private func observeDeviceConnections() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeviceConnectionChange),
+            name: .AVCaptureDeviceWasConnected,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeviceConnectionChange),
+            name: .AVCaptureDeviceWasDisconnected,
+            object: nil
+        )
     }
 
-    private func checkCameraUsageAndOptimize() {
-        updateOptimizationState()
+    @objc private func handleDeviceConnectionChange() {
+        DispatchQueue.main.async { [weak self] in
+            self?.loadDevices()
+        }
     }
 
     func loadDevices() {
         if discoverySession == nil {
+            let deviceTypes: [AVCaptureDevice.DeviceType]
+            if #available(macOS 14.0, *) {
+                deviceTypes = [.external, .builtInWideAngleCamera]
+            } else {
+                deviceTypes = [.externalUnknown, .builtInWideAngleCamera]
+            }
             discoverySession = AVCaptureDevice.DiscoverySession(
-                deviceTypes: [.externalUnknown, .builtInWideAngleCamera],
+                deviceTypes: deviceTypes,
                 mediaType: .video,
                 position: .unspecified
             )
@@ -72,9 +94,11 @@ class CameraManager {
             CaptureDevice(device: device)
         } ?? []
 
-        if let first = availableDevices.first {
-            currentDevice = first
+        if let current = currentDevice, availableDevices.contains(where: { $0.avDevice.uniqueID == current.avDevice.uniqueID }) {
+            return
         }
+
+        currentDevice = availableDevices.first
     }
 
     func optimizeCamera(_ device: CaptureDevice) {
@@ -90,30 +114,7 @@ class CameraManager {
                 device.avDevice.exposureMode = .locked
             }
 
-            if let location = device.avDevice.value(forKey: "connectionID") as? Int {
-                var iterator: io_iterator_t = 0
-                let matching = IOServiceMatching(kIOUSBDeviceClassName)
-                let result = IOServiceGetMatchingServices(kIOMasterPortDefault, matching, &iterator)
-
-                if result == KERN_SUCCESS {
-                    var usbDevice = IOIteratorNext(iterator)
-                    while usbDevice != 0 {
-                        if let (vendorID, productID) = USBHelper.getUSBDeviceInfo(device: usbDevice) {
-                            switch vendorID {
-                            case 0x046d: // Logitech
-                                optimizeLogitech(usbDevice)
-                            case 0x0c45: // Microdia/Generic
-                                optimizeGeneric(usbDevice)
-                            default:
-                                optimizeGeneric(usbDevice)
-                            }
-                        }
-                        IOObjectRelease(usbDevice)
-                        usbDevice = IOIteratorNext(iterator)
-                    }
-                    IOObjectRelease(iterator)
-                }
-            }
+            applyUSBControls(for: device)
 
             if device.avDevice.isExposureModeSupported(.continuousAutoExposure) {
                 device.avDevice.exposureMode = .continuousAutoExposure
@@ -128,6 +129,39 @@ class CameraManager {
         } catch {
             print("Could not configure camera: \(error)")
             isOptimized = false
+        }
+    }
+
+    /// Applies vendor-specific USB controls only to the USB device that actually backs `device`,
+    /// matched by product name, instead of blindly touching every USB device sharing a vendor ID.
+    private func applyUSBControls(for device: CaptureDevice) {
+        var iterator: io_iterator_t = 0
+        let matching = IOServiceMatching(kIOUSBDeviceClassName)
+        let result = IOServiceGetMatchingServices(kIOMasterPortDefault, matching, &iterator)
+
+        guard result == KERN_SUCCESS else { return }
+        defer { IOObjectRelease(iterator) }
+
+        var usbDevice = IOIteratorNext(iterator)
+        while usbDevice != 0 {
+            defer {
+                IOObjectRelease(usbDevice)
+                usbDevice = IOIteratorNext(iterator)
+            }
+
+            guard let info = USBHelper.getUSBDeviceInfo(device: usbDevice),
+                  USBHelper.matchesCamera(productName: info.productName, cameraName: device.name) else {
+                continue
+            }
+
+            switch info.vendorID {
+            case 0x046d: // Logitech
+                optimizeLogitech(usbDevice)
+            case 0x0c45: // Microdia/Generic
+                optimizeGeneric(usbDevice)
+            default:
+                optimizeGeneric(usbDevice)
+            }
         }
     }
 
@@ -210,6 +244,7 @@ class CameraManager {
 
 
     deinit {
-        optimizationTimer?.invalidate()
+        usageObservation?.invalidate()
+        NotificationCenter.default.removeObserver(self)
     }
 }

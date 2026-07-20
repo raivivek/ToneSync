@@ -21,8 +21,12 @@ ToneSync addresses common Hackintosh webcam issues by:
   - ⌘Q: Quit
 
 ### Requirements & Compatibility
-- macOS 11.0 - 14.x with OpenCore bootloader
+- macOS 13.1+ with OpenCore bootloader
 - Compatible webcams:
   - Logitech (C920, C922, C930e, BRIO)
   - Generic USB webcams with UVC support
 - Camera and USB permissions
+
+### Download
+Prebuilt, notarized releases (DMG) are published automatically for every tagged
+version on the [Releases](https://github.com/raivivek/ToneSync/releases) page.
